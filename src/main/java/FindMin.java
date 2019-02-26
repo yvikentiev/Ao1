@@ -1,14 +1,12 @@
 import java.io.*;
-import java.util.Comparator;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class FindMin {
 
-    Map productPrice = new TreeMap<Integer, String>();
+    Map priceMap = new TreeMap<Integer, Set<String>>();
 
     private static int MAX_PRODUCTS = 10;
 
@@ -19,6 +17,15 @@ public class FindMin {
             this.file = file;
         }
 
+        private Object addProduct(String[] product) {
+            Integer price = Integer.valueOf(product[4]);
+            Set<String> productSet = (Set) priceMap.get(price);
+            if (productSet == null)
+                productSet = new TreeSet<>();
+            productSet.add(product[0]);
+            return priceMap.put(price,productSet);
+        }
+
         public void run() {
             BufferedReader br = null;
             String line;
@@ -27,8 +34,8 @@ public class FindMin {
                 while ((line = br.readLine()) != null) {
                     // use comma as separator
                     String[] product = line.split(",");
-                    productPrice.put(Integer.valueOf(product[4]),product[0]);
-                    System.out.println("productPrice.size()=" + productPrice.size() + ", productId= " + product[0] + ", price=" + product[4] + "]");
+                    addProduct(product);
+                    System.out.println("priceMap.size()=" + priceMap.size() + ", productId= " + product[0] + ", price=" + product[4] + "]");
                 }
 
             } catch (IOException e) {
@@ -37,13 +44,17 @@ public class FindMin {
         }
     }
 
+
     public void printMin() throws FileNotFoundException {
         PrintWriter pw = new PrintWriter(new FileOutputStream("output.csv"));
         System.out.println("Min products");
         int i = 0;
-        for (Object key : productPrice.keySet()) {
-            System.out.println("price= " + key + " , productId=" + productPrice.get(key) + "]");
-            pw.println(key+ "," + productPrice.get(key));
+        for (Object key : priceMap.keySet()) {
+            Set<String> productList  = (Set) priceMap.get(key);
+            for (String product : productList) {
+                System.out.println("price= " + key + " , productId=" + product + "]");
+                pw.println(key + "," + product);
+            }
             if (i++ >=1000) break;
         }
         pw.flush();
